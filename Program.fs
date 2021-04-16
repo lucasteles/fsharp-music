@@ -8,19 +8,7 @@ let volume = 0.5f
 let bpm = 120f
 let beatsPerSecond = 60f / bpm
 
-type Note =
-    |C = 0
-    |Cs= 1
-    |D = 2
-    |Ds= 3
-    |M = 4
-    |F = 5
-    |Fs= 6
-    |G = 7
-    |Gs= 8
-    |A = 9
-    |As= 10
-    |B = 11
+type Note = C = 0 |Cs= 1 |D = 2 |Ds= 3 |E = 4 |F = 5 |Fs= 6 |G = 7 |Gs= 8 |A = 9 |As= 10 |B = 11
 
 let play (wave: Pulse list) =
     let filename = "./output.bin"
@@ -60,81 +48,39 @@ let note note' beats (octave: int) =
     let pos = float32 <| (int note' - int Note.A) + octave * Enum.GetNames<Note>().Length
     noteFreq pos beats
 
-let intro =
-    [ note Note.A 0.5f 0
-      note Note.A 0.5f 0
-      note Note.A 0.5f 0
-      note Note.A 0.5f 0
-
-      note Note.Cs 0.5f 1
-      note Note.Cs 0.5f 1
-      note Note.Cs 0.5f 1
-      note Note.Cs 0.5f 1
-
-      note Note.B 0.5f 0
-      note Note.B 0.5f 0
-      note Note.B 0.5f 0
-      note Note.B 0.5f 0
-
-      note Note.M 0.5f 1
-      note Note.M 0.5f 1
-      note Note.M 0.5f 1
-      note Note.M 0.5f 1
-
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
-
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
-
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
-
-      note Note.B 0.5f 0
-      note Note.A 0.5f 0
-      note Note.Gs 0.5f 0
-      note Note.M 0.5f 0
-    ] |> List.collect id
-
 let verso =
-    [ note Note.Fs 1f 0
-      note Note.Fs 0.5f 0
-      note Note.Cs 0.5f 1
-      note Note.B 1f 0
+    [ note Note.G 0.5f 0
+      note Note.G 0.5f 0
       note Note.A 1f 0
-      note Note.Gs 1f 0
-      note Note.Gs 0.5f 0
-      note Note.Gs 0.5f 0
+      note Note.G 1f 0
+      note Note.C 1f 1
+      note Note.B 2f 0
+
+      note Note.G 0.5f 0
+      note Note.G 0.5f 0
+      note Note.A 1f 0
+      note Note.G 1f 0
+      note Note.D 1f 1
+      note Note.C 2f 1
+
+      note Note.G 0.5f 0
+      note Note.G 0.5f 0
+      note Note.G 2f 1
+      note Note.E 1f 1
+      note Note.C 1f 1
       note Note.B 1f 0
-      note Note.A 0.5f 0
-      note Note.Gs 0.5f 0
-      note Note.Fs 1f 0
+      note Note.A 2f 0
 
-      note Note.Fs 0.5f 0
-      note Note.A 0.5f 1
-      note Note.Gs 0.5f 1
-      note Note.A 0.5f 1
-      note Note.Gs 0.5f 1
-      note Note.A 0.5f 1
-      note Note.Fs 1f 0
-
-      note Note.Fs 0.5f 0
-      note Note.A 0.5f 1
-      note Note.Gs 0.5f 1
-      note Note.A 0.5f 1
-      note Note.Gs 0.5f 1
-      note Note.A 0.5f 1
+      note Note.F 0.5f 1
+      note Note.F 0.5f 1
+      note Note.E 2f 1
+      note Note.C 1f 1
+      note Note.D 1f 1
+      note Note.C 2f 1
     ] |> List.collect id
 
 let music =
     [for _ = 0 to 2 do
-      yield! intro
       yield! verso
       yield! verso]
 
