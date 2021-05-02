@@ -4,23 +4,11 @@ open System.IO
 type Pulse = float32
 let sampleRate = 48000f
 let pitchStandard = 440f
-let volume = 0.5f
-let bpm = 120f
+let totalVolume = 0.5f
+let bpm = 100f
 let beatsPerSecond = 60f / bpm
 
-type Note =
-    |C = 0
-    |Cs= 1
-    |D = 2
-    |Ds= 3
-    |M = 4
-    |F = 5
-    |Fs= 6
-    |G = 7
-    |Gs= 8
-    |A = 9
-    |As= 10
-    |B = 11
+type Note = C=0 |Cs=1 |D=2 |Ds=3 |E=4 |F=5 |Fs=6 |G=7 |Gs=8 |A=9 |As=10 |B=11
 
 let play (wave: Pulse list) =
     let filename = "./output.bin"
@@ -37,7 +25,7 @@ let getWave step duration =
     [ 0f .. (sampleRate * duration) ]
     |> List.map ((*) step)
     |> List.map MathF.Sin
-    |> List.map ((*) volume)
+    |> List.map ((*) totalVolume)
 
 let freq hz duration =
     let step = hz * 2f * MathF.PI / sampleRate
@@ -56,87 +44,129 @@ let f n =
 
 let noteFreq n beats = freq (f n) (beats * beatsPerSecond)
 
+let volume (vol: float32) = List.map ((*)vol)
+
 let note note' beats (octave: int) =
     let pos = float32 <| (int note' - int Note.A) + octave * Enum.GetNames<Note>().Length
     noteFreq pos beats
 
-let intro =
-    [ note Note.A 0.5f 0
-      note Note.A 0.5f 0
-      note Note.A 0.5f 0
-      note Note.A 0.5f 0
+let clipList a b = 
+    let minSize = Math.Min(List.length a, List.length b)
+    (List.take minSize a),(List.take minSize b)
 
-      note Note.Cs 0.5f 1
-      note Note.Cs 0.5f 1
-      note Note.Cs 0.5f 1
-      note Note.Cs 0.5f 1
+let combine a b = 
+    clipList a b
+    ||> List.map2 (fun x y -> (x + y) / 2.f) 
 
-      note Note.B 0.5f 0
-      note Note.B 0.5f 0
-      note Note.B 0.5f 0
-      note Note.B 0.5f 0
+let repeat n = List.replicate n >> List.concat 
 
-      note Note.M 0.5f 1
-      note Note.M 0.5f 1
-      note Note.M 0.5f 1
-      note Note.M 0.5f 1
+let base' = 
+    [ note Note.Ds 1f -2  
+      note Note.As 1f -3  
+      note Note.Ds 1f -2  
+      note Note.As 1f -3  
+      note Note.Cs 1f -2  
+      note Note.As 1f -3  
+      note Note.Ds 1f -2  
+      note Note.As 1f -3 ]
+    |> List.concat 
 
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
+let melodic = 
+    [
+        note Note.As 0.5f -1
+        note Note.Ds 0.5f 0
 
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
+        note Note.Ds 0.75f 0
+        note Note.F 0.25f 0
 
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
-      note Note.Fs 0.5f 1
+        note Note.Fs 0.25f 0
+        note Note.Fs 0.25f 0
+        note Note.Ds 0.25f 0
+        note Note.Ds 0.25f 0 
 
-      note Note.B 0.5f 0
-      note Note.A 0.5f 0
-      note Note.Gs 0.5f 0
-      note Note.M 0.5f 0
-    ] |> List.collect id
+        note Note.Ds 0.50f 0 
+        note Note.Ds 0.25f 0 
+        note Note.Fs 0.25f 0
+        
+        note Note.F 0.50f 0  
+        note Note.Cs 0.50f 0 
 
-let verso =
-    [ note Note.Fs 1f 0
-      note Note.Fs 0.5f 0
-      note Note.Cs 0.5f 1
-      note Note.B 1f 0
-      note Note.A 1f 0
-      note Note.Gs 1f 0
-      note Note.Gs 0.5f 0
-      note Note.Gs 0.5f 0
-      note Note.B 1f 0
-      note Note.A 0.5f 0
-      note Note.Gs 0.5f 0
-      note Note.Fs 1f 0
+        note Note.Cs 0.50f 0 
+        note Note.F 0.50f 0 
 
-      note Note.Fs 0.5f 0
-      note Note.A 0.5f 1
-      note Note.Gs 0.5f 1
-      note Note.A 0.5f 1
-      note Note.Gs 0.5f 1
-      note Note.A 0.5f 1
-      note Note.Fs 1f 0
+        note Note.Fs 0.50f 0 
+        note Note.Ds 0.50f 0 
 
-      note Note.Fs 0.5f 0
-      note Note.A 0.5f 1
-      note Note.Gs 0.5f 1
-      note Note.A 0.5f 1
-      note Note.Gs 0.5f 1
-      note Note.A 0.5f 1
-    ] |> List.collect id
+        note Note.Ds 0.75f 0 
+        note Note.Ds 0.25f 0  
+
+        note Note.As 0.5f -1
+        note Note.Ds 0.5f 0
+
+        note Note.Ds 0.75f 0
+        note Note.F 0.25f 0
+
+        note Note.Fs 0.5f 0
+        note Note.Ds 0.25f 0
+        note Note.Ds 0.75f 0
+        note Note.Ds 0.25f 0
+        note Note.Fs 0.25f 0
+
+        note Note.As 0.25f 0
+        note Note.As 0.25f 0
+        note Note.As 0.25f 0
+        note Note.Gs 0.25f 0
+
+        note Note.Fs 0.25f 0
+        note Note.Fs 0.25f 0
+        note Note.F 0.25f 0
+        note Note.F 0.25f 0
+
+        note Note.Fs 0.5f 0
+        note Note.Ds 0.5f 0
+
+        note Note.Ds 0.5f 0
+        note Note.Ds 0.25f 0
+        note Note.Fs 0.25f 0
+
+        for _ = 0 to 2 do
+            note Note.As 0.5f 0
+            note Note.As 0.5f 0
+
+            note Note.Gs 0.5f 0
+            note Note.Fs 0.5f 0
+
+            note Note.F 0.5f 0
+            note Note.Cs 0.25f 0
+            note Note.Cs 0.75f 0
+            note Note.Cs 0.25f 0
+            note Note.F 0.25f 0
+
+            note Note.Gs 0.25f 0
+            note Note.Gs 0.25f 0
+            note Note.Gs 0.25f 0
+            note Note.Gs 0.25f 0
+
+            note Note.Fs 0.25f 0
+            note Note.Fs 0.25f 0
+            note Note.F 0.25f 0
+            note Note.F 0.25f 0
+
+            note Note.Fs 0.5f 0
+            note Note.Ds 0.25f 0
+            note Note.Ds 0.75f 0
+            note Note.Ds 0.25f 0
+            note Note.Fs 0.25f 0
+        ]
+    |> List.concat 
 
 let music =
-    [for _ = 0 to 2 do
-      yield! intro
-      yield! verso
-      yield! verso]
+    base'
+    |> repeat 3
+    |> volume 0.5f
+    |> combine melodic
+    |> repeat 3
+      
 
 [<EntryPoint>]
 let main argv =
