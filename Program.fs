@@ -33,10 +33,10 @@ let play (wave: Pulse list) =
     let mutable alBuffer = 0
     AL.GenBuffer(&alBuffer)
     AL.BufferData(alBuffer, ALFormat.MonoFloat32Ext, waveArray, int sampleRate)
-    AL.Listener(ALListenerf.Gain, 100f)
+    AL.Listener(ALListenerf.Gain, 1f)
     let mutable alSource = 0
     AL.GenSource(&alSource)
-    AL.Source(alSource, ALSourcef.Gain, 100f)
+    AL.Source(alSource, ALSourcef.Gain, 1f)
     AL.Source(alSource, ALSourcei.Buffer, alBuffer)
     AL.SourcePlay(alSource)
     while AL.GetSourceState alSource = ALSourceState.Playing do
