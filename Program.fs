@@ -1,6 +1,8 @@
 ﻿open System
 open System.Diagnostics
 open System.IO
+open System.Threading
+open OpenTK.Audio
 type Pulse = float32
 let sampleRate = 48000f
 let pitchStandard = 440f
@@ -11,15 +13,29 @@ let beatsPerSecond = 60f / bpm
 type Note = C = 0 |Cs= 1 |D = 2 |Ds= 3 |E = 4 |F = 5 |Fs= 6 |G = 7 |Gs= 8 |A = 9 |As= 10 |B = 11
 
 let play (wave: Pulse list) =
-    let filename = "./output.bin"
-    let bytes =
-        wave
-        |> Array.ofList
-        |> Array.collect BitConverter.GetBytes
+    let waveArray = wave |> Array.ofList
 
-    if File.Exists filename then File.Delete filename
-    File.WriteAllBytes(filename, bytes)
-    Process.Start($"ffplay", $"-showmode 1 -f f32le -ar {sampleRate} ./output.bin") |> ignore
+    let deviceName = ALC.GetString (ALDevice.Null, AlcGetString.DefaultDeviceSpecifier)
+    let device = ALC.OpenDevice deviceName
+    let context = ALC.CreateContext(device, Unchecked.defaultof<int[]>)
+    ALC.MakeContextCurrent context |> ignore
+
+    let mutable alBuffer = 0
+    AL.GenBuffer(&alBuffer)
+    AL.BufferData(alBuffer, ALFormat.MonoFloat32Ext, waveArray, int sampleRate)
+    AL.Listener(ALListenerf.Gain, 1f)
+    let mutable alSource = 0
+    AL.GenSource(&alSource)
+    AL.Source(alSource, ALSourcef.Gain, 1f)
+    AL.Source(alSource, ALSourcei.Buffer, alBuffer)
+    AL.SourcePlay(alSource)
+    while AL.GetSourceState alSource = ALSourceState.Playing do
+        Thread.Sleep(10)
+    AL.SourceStop(alSource)
+
+    ALC.MakeContextCurrent ALContext.Null |> ignore
+    ALC.DestroyContext context
+    ALC.CloseDevice device |> ignore
 
 let getWave step duration =
     [ 0f .. (sampleRate * duration) ]
