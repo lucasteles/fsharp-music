@@ -1,8 +1,8 @@
 ﻿open System
 open System.Diagnostics
 open System.IO
+open OpenTK.Audio.OpenAL
 open System.Threading
-open OpenTK.Audio
 type Pulse = float32
 let sampleRate = 48000f
 let pitchStandard = 440f
