@@ -1,6 +1,6 @@
 ﻿open System
-open System.Diagnostics
-open System.IO
+open OpenTK.Audio.OpenAL
+open System.Threading
 type Pulse = float32
 let sampleRate = 48000f
 let pitchStandard = 440f
@@ -23,15 +23,30 @@ type Note =
     |B = 11
 
 let play (wave: Pulse list) =
-    let filename = "./output.bin"
-    let bytes =
-        wave
-        |> Array.ofList
-        |> Array.collect BitConverter.GetBytes
+    let waveArray = wave |> Array.ofList
 
-    if File.Exists filename then File.Delete filename
-    File.WriteAllBytes(filename, bytes)
-    Process.Start($"ffplay", $"-showmode 1 -f f32le -ar {sampleRate} ./output.bin") |> ignore
+    let deviceName = ALC.GetString (ALDevice.Null, AlcGetString.DefaultDeviceSpecifier)
+    let device = ALC.OpenDevice deviceName
+    let context = ALC.CreateContext(device, Unchecked.defaultof<int[]>)
+    ALC.MakeContextCurrent context |> ignore
+
+    let mutable alBuffer = 0
+    AL.GenBuffer(&alBuffer)
+    AL.BufferData(alBuffer, ALFormat.MonoFloat32Ext, waveArray, int sampleRate)
+    AL.Listener(ALListenerf.Gain, 100f)
+    let mutable alSource = 0
+    AL.GenSource(&alSource)
+    AL.Source(alSource, ALSourcef.Gain, 100f)
+    AL.Source(alSource, ALSourcei.Buffer, alBuffer)
+    AL.SourcePlay(alSource)
+    while AL.GetSourceState alSource = ALSourceState.Playing do
+        Thread.Sleep(10)
+    AL.SourceStop(alSource)
+
+    ALC.MakeContextCurrent ALContext.Null |> ignore
+    ALC.DestroyContext context
+    ALC.CloseDevice device |> ignore
+
 
 let getWave step duration =
     [ 0f .. (sampleRate * duration) ]
@@ -47,8 +62,8 @@ let freq hz duration =
         |> List.map (fun x -> MathF.Min(1f, float32 x / 1000f))
     let release = List.rev attack
 
-    (output, attack, release)
-    |||> List.map3 (fun a b c -> a * b * c)
+
+    List.map3 (fun a b c -> a * b * c) output attack release
 
 let f n =
     MathF.Pow(MathF.Pow(2f, 1.0f / 12.0f), n)
@@ -142,3 +157,4 @@ let music =
 let main argv =
     play music |> ignore
     0
+
